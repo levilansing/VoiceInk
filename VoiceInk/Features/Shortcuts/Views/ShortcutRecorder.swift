@@ -261,6 +261,17 @@ final class ShortcutRecorderModel: ObservableObject {
     }
 
     private func handleKeyDown(keyCode: UInt16, modifierFlags: NSEvent.ModifierFlags) -> Bool {
+        if keyCode == UInt16(kVK_CapsLock) {
+            let modifiers = Shortcut.normalizedModifierFlags(modifierFlags, forKeyCode: keyCode)
+            let shortcut = Shortcut.modifierOnly(
+                keyCode: UInt16(kVK_CapsLock),
+                modifierFlags: modifiers.isEmpty ? [.capsLock] : modifiers.union([.capsLock])
+            )
+            previewShortcut = shortcut
+            finish(with: shortcut)
+            return true
+        }
+
         let modifiers = Shortcut.normalizedModifierFlags(modifierFlags, forKeyCode: keyCode)
 
         if keyCode == UInt16(kVK_Escape), modifiers.isEmpty {
@@ -301,6 +312,17 @@ final class ShortcutRecorderModel: ObservableObject {
     }
 
     private func handleFlagsChanged(keyCode: UInt16, modifierFlags: NSEvent.ModifierFlags) -> Bool {
+        if keyCode == UInt16(kVK_CapsLock) {
+            let modifiers = Shortcut.normalizedModifierFlags(modifierFlags, forKeyCode: keyCode)
+            let shortcut = Shortcut.modifierOnly(
+                keyCode: UInt16(kVK_CapsLock),
+                modifierFlags: modifiers.isEmpty ? [.capsLock] : modifiers.union([.capsLock])
+            )
+            previewShortcut = shortcut
+            finish(with: shortcut)
+            return true
+        }
+
         let modifiers = Shortcut.normalizedModifierFlags(modifierFlags, forKeyCode: keyCode)
 
         if modifiers.isEmpty,

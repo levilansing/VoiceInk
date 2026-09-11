@@ -205,6 +205,9 @@ final class ShortcutMonitor {
                     modifierFlags: modifierFlags,
                     eventTime: eventTime
                 )
+                if state.shortcut.isCapsLock && inputCode == UInt16(kVK_CapsLock) {
+                    shouldSuppress = true
+                }
                 continue
             }
 
@@ -342,6 +345,41 @@ final class ShortcutMonitor {
         var state = state
 
         guard kind == .flagsChanged else {
+            return
+        }
+
+        if state.shortcut.isCapsLock {
+            guard keyCode == UInt16(kVK_CapsLock) else { return }
+
+            let modeKey: String
+            if action == .secondaryRecording {
+                modeKey = "secondaryRecordingShortcutMode"
+            } else {
+                modeKey = "primaryRecordingShortcutMode"
+            }
+
+            let mode = RecordingShortcutManager.Mode(
+                rawValue: UserDefaults.standard.string(forKey: modeKey) ?? ""
+            ) ?? .toggle
+
+            if mode == .toggle {
+                dispatchShortcutDown(for: action, eventTime: eventTime)
+                dispatchShortcutUp(for: action, eventTime: eventTime)
+            } else {
+                if state.isDown {
+                    state.isDown = false
+                    state.pressedAt = nil
+                    state.isInterrupted = false
+                    shortcuts[action] = state
+                    dispatchShortcutUp(for: action, eventTime: eventTime)
+                } else {
+                    state.isDown = true
+                    state.pressedAt = eventTime
+                    state.isInterrupted = false
+                    shortcuts[action] = state
+                    dispatchShortcutDown(for: action, eventTime: eventTime)
+                }
+            }
             return
         }
 

@@ -24,6 +24,10 @@ struct Shortcut: Codable, Equatable {
         kind == .modifierOnly
     }
 
+    var isCapsLock: Bool {
+        keyCode == UInt16(kVK_CapsLock)
+    }
+
     var displayString: String {
         displayTokens.joined(separator: " + ")
     }
@@ -107,6 +111,10 @@ struct Shortcut: Codable, Equatable {
             return false
         }
 
+        if isCapsLock {
+            return eventKeyCode == UInt16(kVK_CapsLock)
+        }
+
         let normalizedFlags = Self.normalizedModifierFlags(eventModifierFlags, forKeyCode: eventKeyCode)
 
         if keyCode == Self.genericModifierKeyCode {
@@ -121,6 +129,10 @@ struct Shortcut: Codable, Equatable {
     ) -> Bool {
         guard kind == .modifierOnly else {
             return false
+        }
+
+        if isCapsLock {
+            return eventKeyCode == UInt16(kVK_CapsLock)
         }
 
         let normalizedFlags = Self.normalizedModifierFlags(eventModifierFlags, forKeyCode: eventKeyCode)
@@ -185,6 +197,7 @@ struct Shortcut: Codable, Equatable {
         UInt16(kVK_Command),
         UInt16(kVK_RightCommand),
         UInt16(kVK_Function),
+        UInt16(kVK_CapsLock),
     ]
 
     private static let functionKeyCodes: Set<UInt16> = [
@@ -234,6 +247,8 @@ struct Shortcut: Codable, Equatable {
             return "Right ⌘"
         case UInt16(kVK_Function):
             return "Fn"
+        case UInt16(kVK_CapsLock):
+            return "Caps Lock"
         default:
             return nil
         }
@@ -353,6 +368,7 @@ struct Shortcut: Codable, Equatable {
     ]
 
     private static let specialKeyNames: [UInt16: String] = [
+        UInt16(kVK_CapsLock): "Caps Lock",
         UInt16(kVK_Space): "Space",
         UInt16(kVK_Return): "Return",
         UInt16(kVK_Tab): "Tab",
@@ -408,7 +424,7 @@ struct Shortcut: Codable, Equatable {
 }
 
 private extension NSEvent.ModifierFlags {
-    static let shortcutRelevant: NSEvent.ModifierFlags = [.control, .option, .shift, .command, .function]
+    static let shortcutRelevant: NSEvent.ModifierFlags = [.control, .option, .shift, .command, .function, .capsLock]
 
     var shortcutNormalized: NSEvent.ModifierFlags {
         intersection(Self.shortcutRelevant)
@@ -437,6 +453,10 @@ private extension NSEvent.ModifierFlags {
             tokens.append("Fn")
         }
 
+        if contains(.capsLock) {
+            tokens.append("Caps Lock")
+        }
+
         return tokens
     }
 
@@ -447,6 +467,7 @@ private extension NSEvent.ModifierFlags {
             .shift,
             .command,
             .function,
+            .capsLock,
         ].filter { contains($0) }.count
     }
 
