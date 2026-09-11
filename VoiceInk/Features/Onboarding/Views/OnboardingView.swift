@@ -165,17 +165,11 @@ struct OnboardingView: View {
                             )
                         },
                         onContinue: {
-                            #if LOCAL_BUILD
-                                coordinator.flow.completeOnboarding(
-                                    isTranscriptionSetupReady: isTranscriptionSetupReady
-                                ) {
-                                    hasCompletedOnboardingV2 = true
-                                }
-                            #else
-                                coordinator.flow.goToLicenseStep(
-                                    isTranscriptionSetupReady: isTranscriptionSetupReady
-                                )
-                            #endif
+                            coordinator.flow.completeOnboarding(
+                                isTranscriptionSetupReady: isTranscriptionSetupReady
+                            ) {
+                                hasCompletedOnboardingV2 = true
+                            }
                         }
                     )
                     .transition(.opacity)
