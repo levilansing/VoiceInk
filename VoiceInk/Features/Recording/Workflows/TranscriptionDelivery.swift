@@ -161,6 +161,17 @@ final class TranscriptionDelivery {
         SoundManager.shared.playStopSound()
         await actions.dismiss()
 
+        // Copy dictation to clipboard by default; avoid overwriting long sessions with empty/nearly empty ones
+        let isNewMeaningful = LastTranscriptionService.isMeaningful(pastedText)
+        let currentClipboard = NSPasteboard.general.string(forType: .string) ?? ""
+        let currentClipboardIsSubstantial = currentClipboard.trimmingCharacters(in: .whitespacesAndNewlines).count > 15
+
+        if isNewMeaningful || !currentClipboardIsSubstantial {
+            _ = ClipboardManager.copyToClipboard(pastedText)
+        } else {
+            logger.notice("Preserved previous clipboard content instead of overwriting with nearly-empty dictation")
+        }
+
         let pasteTask = CursorPaster.startPasteAtCursor(pastedText)
 
         let autoSendKey = output.outputMode == .paste ? output.autoSendKey : .none

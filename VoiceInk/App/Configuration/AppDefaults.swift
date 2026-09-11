@@ -28,10 +28,13 @@ enum AppDefaults {
             // Onboarding & General
             "hasCompletedOnboardingV2": false,
             "hasPreparedOnboardingV2": false,
-            "enableAnnouncements": true,
+            "enableAnnouncements": false,
+            "VoiceInkChecksForUpdatesOnLaunch": false,
+            "SUEnableAutomaticChecks": false,
+            "GitHubStarPromptHasStarred": true,
 
             // Clipboard
-            "restoreClipboardAfterPaste": true,
+            "restoreClipboardAfterPaste": false,
             "clipboardRestoreDelay": 2.0,
             "useAppleScriptPaste": false,
 

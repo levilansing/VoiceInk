@@ -179,6 +179,7 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
                         recordingState: stateProvider.recordingState,
                         action: onRecordButtonTapped
                     )
+                    RecorderHistoryButton(modelContext: stateProvider.modelContext, buttonSize: 20)
                 }
                 RecorderModeButton(buttonSize: 20, padding: EdgeInsets())
                 Spacer(minLength: 0)

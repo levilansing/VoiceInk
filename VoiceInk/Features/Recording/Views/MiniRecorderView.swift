@@ -12,7 +12,7 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     // MARK: - Layout Constants
 
     private let controlBarHeight: CGFloat = 40
-    private let compactWidth: CGFloat = 184
+    private let compactWidth: CGFloat = 212
     private let expandedWidth: CGFloat = 300
     private let assistantWidth: CGFloat = 520
     private let compactCornerRadius: CGFloat = 20
@@ -44,10 +44,14 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
                 if shouldShowCloseButton {
                     RecorderCloseButton(action: onCloseTapped)
                 } else {
-                    RecorderRecordButton(
-                        recordingState: stateProvider.recordingState,
-                        action: onRecordButtonTapped
-                    )
+                    HStack(spacing: 6) {
+                        RecorderRecordButton(
+                            recordingState: stateProvider.recordingState,
+                            action: onRecordButtonTapped
+                        )
+
+                        RecorderHistoryButton(modelContext: stateProvider.modelContext)
+                    }
                 }
             }
             .padding(.leading, 10)

@@ -3,30 +3,69 @@ import SwiftData
 
 class LastTranscriptionService: ObservableObject {
 
+    static func isMeaningful(_ text: String?) -> Bool {
+        guard let text = text?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else {
+            return false
+        }
+        let alphanumeric = text.filter { $0.isLetter || $0.isNumber }
+        return alphanumeric.count >= 3
+    }
+
     static func getLastTranscription(from modelContext: ModelContext) -> Transcription? {
+        getLastMeaningfulTranscription(from: modelContext)
+    }
+
+    static func getLastMeaningfulTranscription(from modelContext: ModelContext?) -> Transcription? {
+        guard let modelContext else { return nil }
         var descriptor = FetchDescriptor<Transcription>(
             sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
         )
-        descriptor.fetchLimit = 1
+        descriptor.fetchLimit = 20
 
         do {
             let transcriptions = try modelContext.fetch(descriptor)
-            return transcriptions.first
+            // Prioritize the most recent completed transcription with meaningful text
+            for item in transcriptions where item.transcriptionStatus == TranscriptionStatus.completed.rawValue {
+                let candidateText = item.enhancedText?.isEmpty == false ? item.enhancedText! : item.text
+                if isMeaningful(candidateText) {
+                    return item
+                }
+            }
+            // Fallback to any completed transcription
+            return transcriptions.first(where: { $0.transcriptionStatus == TranscriptionStatus.completed.rawValue })
         } catch {
             print("Error fetching last transcription: \(error)")
             return nil
         }
     }
 
-    static func copyLastTranscription(from modelContext: ModelContext) {
-        guard let lastTranscription = getLastTranscription(from: modelContext) else {
+    static func getRecentTranscriptions(from modelContext: ModelContext?, limit: Int = 8) -> [Transcription] {
+        guard let modelContext else { return [] }
+        var descriptor = FetchDescriptor<Transcription>(
+            sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+        )
+        descriptor.fetchLimit = limit * 2
+
+        do {
+            let transcriptions = try modelContext.fetch(descriptor)
+            let completed = transcriptions.filter { $0.transcriptionStatus == TranscriptionStatus.completed.rawValue }
+            return Array(completed.prefix(limit))
+        } catch {
+            print("Error fetching recent transcriptions: \(error)")
+            return []
+        }
+    }
+
+    @discardableResult
+    static func copyLastTranscription(from modelContext: ModelContext?) -> Bool {
+        guard let lastTranscription = getLastMeaningfulTranscription(from: modelContext) else {
             Task { @MainActor in
                 NotificationManager.shared.showNotification(
                     title: String(localized: "No transcription available"),
                     type: .error
                 )
             }
-            return
+            return false
         }
 
         // Prefer enhanced text; fallback to original text
@@ -43,7 +82,7 @@ class LastTranscriptionService: ObservableObject {
         Task { @MainActor in
             if success {
                 NotificationManager.shared.showNotification(
-                    title: String(localized: "Last transcription copied"),
+                    title: String(localized: "Last dictation copied"),
                     type: .success
                 )
             } else {
@@ -53,6 +92,7 @@ class LastTranscriptionService: ObservableObject {
                 )
             }
         }
+        return success
     }
 
     static func pasteLastTranscription(from modelContext: ModelContext) {
