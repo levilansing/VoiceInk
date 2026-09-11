@@ -49,30 +49,14 @@ final class UpdaterViewModel: NSObject, ObservableObject, SPUUpdaterDelegate {
     }
 
     func setChecksForUpdatesWhenDashboardAppears(_ value: Bool) {
-        guard checksForUpdatesWhenDashboardAppears != value else { return }
-
-        checksForUpdatesWhenDashboardAppears = value
-        defaults.set(value, forKey: DefaultsKey.automaticUpdateChecks)
-
-        if value {
-            checkForUpdateInformationIfPossible()
-        } else {
-            availableUpdate = nil
-        }
+        checksForUpdatesWhenDashboardAppears = false
+        defaults.set(false, forKey: DefaultsKey.automaticUpdateChecks)
+        availableUpdate = nil
     }
 
     func checkForUpdatesIfDue() {
-        guard checksForUpdatesWhenDashboardAppears else { return }
-
-        let updater = updaterController.updater
-        guard !updater.sessionInProgress else { return }
-
-        if let lastCheckDate = updater.lastUpdateCheckDate {
-            let elapsed = Date().timeIntervalSince(lastCheckDate)
-            guard elapsed < 0 || elapsed >= updater.updateCheckInterval else { return }
-        }
-
-        checkForUpdateInformationIfPossible()
+        // Disabled: completely offline, no background update checks or network calls
+        return
     }
 
     func checkForUpdates() {
@@ -139,16 +123,9 @@ final class UpdaterViewModel: NSObject, ObservableObject, SPUUpdaterDelegate {
     }
 
     private static func initialAutomaticCheckPreference(in defaults: UserDefaults) -> Bool {
-        if let preference = defaults.object(forKey: DefaultsKey.automaticUpdateChecks) as? Bool {
-            return preference
-        }
-
-        // Preserve an explicit choice made through VoiceInk's previous Sparkle-backed
-        // setting. With no saved choice, keep VoiceInk's existing opt-in default.
-        let preference = (defaults.object(forKey: DefaultsKey.sparkleAutomaticChecks) as? Bool) ?? true
-
-        defaults.set(preference, forKey: DefaultsKey.automaticUpdateChecks)
-        return preference
+        defaults.set(false, forKey: DefaultsKey.automaticUpdateChecks)
+        defaults.set(false, forKey: DefaultsKey.sparkleAutomaticChecks)
+        return false
     }
 }
 

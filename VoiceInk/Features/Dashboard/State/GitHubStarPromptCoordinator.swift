@@ -53,18 +53,9 @@ final class GitHubStarPromptCoordinator: ObservableObject {
         hasDeferredAtLeastOnce = defaults.bool(forKey: Keys.hasDeferredOnce)
     }
 
-    // Call once when the main window appears; only the first call per app run schedules the timer.
+    // Call once when the main window appears; disabled in offline/privacy mode.
     func scheduleIfNeeded(modelContainer: ModelContainer) {
-        guard !hasScheduled else { return }
-        hasScheduled = true
-        self.modelContainer = modelContainer
-        guard Self.shouldShow else { return }
-
-        scheduleTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(Self.showDelaySeconds * 1_000_000_000))
-            guard !Task.isCancelled else { return }
-            await self?.evaluateAndPresent()
-        }
+        // Disabled: no background checks or prompts
     }
 
     private func evaluateAndPresent() async {
@@ -148,10 +139,7 @@ final class GitHubStarPromptCoordinator: ObservableObject {
 
     // Once Later has been clicked, the toast retires for good; the persistent footer button takes over.
     private static var shouldShow: Bool {
-        let defaults = UserDefaults.standard
-        if defaults.bool(forKey: Keys.hasStarred) { return false }
-        if defaults.bool(forKey: Keys.hasDeferredOnce) { return false }
-        return true
+        false
     }
 
     private func hasReachedSessionThreshold() async -> Bool {

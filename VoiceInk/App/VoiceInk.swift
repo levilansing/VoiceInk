@@ -24,7 +24,7 @@ struct VoiceInkApp: App {
     @StateObject private var licenseViewModel = LicenseViewModel.shared
     @StateObject private var activeWindowService = ActiveWindowService.shared
     @AppStorage("hasCompletedOnboardingV2") private var hasCompletedOnboardingV2 = false
-    @AppStorage("enableAnnouncements") private var enableAnnouncements = true
+    @AppStorage("enableAnnouncements") private var enableAnnouncements = false
     @State private var showMenuBarIcon = true
     @State private var didShowLaunchReminders = false
 

@@ -20,49 +20,20 @@ final class AnnouncementsService {
     private var timer: Timer?
 
     // MARK: - Public API
+    // Announcements fetching is completely disabled to prevent calling home / remote polling.
 
     func start() {
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: refreshInterval, repeats: true) { [weak self] _ in
-            self?.fetchAndMaybeShow()
-        }
-        // Do an initial fetch shortly after launch
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
-            self?.fetchAndMaybeShow()
-        }
+        // Disabled: no background network polling
     }
 
     func stop() {
-        timer?.invalidate()
-        timer = nil
+        // No-op
     }
 
     // MARK: - Core Logic
 
     private func fetchAndMaybeShow() {
-        let request = URLRequest(url: announcementsURL, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
-        let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            guard let self = self else { return }
-            guard error == nil, let data = data else { return }
-            guard let announcements = try? JSONDecoder().decode([RemoteAnnouncement].self, from: data) else { return }
-
-            let now = Date()
-            let notDismissed = announcements.filter { !self.isDismissed($0.id) }
-            let valid = notDismissed.filter { $0.isActive(at: now) }
-
-            guard let next = valid.first else { return }
-
-            DispatchQueue.main.async {
-                let url = next.url.flatMap { URL(string: $0) }
-                AnnouncementManager.shared.showAnnouncement(
-                    title: next.title,
-                    description: next.description,
-                    learnMoreURL: url,
-                    onDismiss: { self.markDismissed(next.id) }
-                )
-            }
-        }
-        task.resume()
+        // Disabled: no remote network requests
     }
 
     private func isDismissed(_ id: String) -> Bool {

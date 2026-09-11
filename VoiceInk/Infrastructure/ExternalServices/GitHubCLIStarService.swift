@@ -11,25 +11,11 @@ enum GitHubCLIStarService {
     }
 
     static func checkRemoteStarState() async -> RemoteStarState {
-        guard let ghPath = await resolveGhPath() else { return .unavailable }
-        guard let result = await run(ghPath, ["api", "--include", "user/starred/\(repoSlug)"]) else {
-            return .unavailable
-        }
-        if result.output.range(of: #"HTTP/\S+\s+(200|204)\b"#, options: .regularExpression) != nil {
-            return .starred
-        }
-        if result.output.range(of: #"HTTP/\S+\s+404\b"#, options: .regularExpression) != nil {
-            return .notStarred
-        }
         return .unavailable
     }
 
     static func star() async -> Bool {
-        guard let ghPath = await resolveGhPath() else { return false }
-        guard let result = await run(ghPath, ["api", "-X", "PUT", "user/starred/\(repoSlug)"]) else {
-            return false
-        }
-        return result.exitCode == 0
+        return false
     }
 
     // MARK: - gh binary resolution
