@@ -6,5 +6,5 @@ import SwiftData
 protocol RecorderStateProvider: AnyObject {
     var recordingState: RecordingState { get }
     var partialTranscript: String { get }
-    var modelContext: ModelContext? { get }
+    var modelContext: ModelContext { get }
 }
