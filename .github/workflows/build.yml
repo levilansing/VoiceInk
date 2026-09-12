@@ -1,0 +1,44 @@
+name: Build VoiceInk App
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build macOS App
+    runs-on: macos-14
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Cache Whisper Framework
+        id: cache-whisper
+        uses: actions/cache@v4
+        with:
+          path: ~/VoiceInk-Dependencies/whisper.cpp/build-apple/whisper.xcframework
+          key: whisper-xcframework-${{ runner.os }}
+
+      - name: Prepare Whisper xcframework
+        run: |
+          make setup
+
+      - name: Build VoiceInk App
+        run: |
+          make local LOCAL_CODESIGN_IDENTITY=-
+
+      - name: Create Zip Archive
+        run: |
+          ditto -c -k --keepParent "$HOME/Downloads/VoiceInk.app" "VoiceInk-Local.zip"
+
+      - name: Upload App Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VoiceInk-Local-App
+          path: VoiceInk-Local.zip
+          if-no-files-found: error
