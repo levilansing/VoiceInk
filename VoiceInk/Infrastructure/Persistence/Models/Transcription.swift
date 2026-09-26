@@ -65,12 +65,25 @@ final class Transcription {
         self.transcriptionStatus = transcriptionStatus.rawValue
     }
 
+    var status: TranscriptionStatus {
+        guard let transcriptionStatus else { return .pending }
+        return TranscriptionStatus(rawValue: transcriptionStatus) ?? .pending
+    }
+
+    var isCanceled: Bool {
+        status == .canceled
+    }
+
     func markAsCanceledTranscription(
+        text: String? = nil,
         duration: TimeInterval? = nil,
         modelName: String? = nil
     ) {
-        text = Self.canceledTranscriptionText
-        enhancedText = nil
+        if let text, !text.isEmpty {
+            self.text = text
+        } else if self.text.isEmpty {
+            self.text = Self.canceledTranscriptionText
+        }
         transcriptionStatus = TranscriptionStatus.canceled.rawValue
         if let duration {
             self.duration = duration
@@ -78,11 +91,5 @@ final class Transcription {
         if let modelName {
             transcriptionModelName = modelName
         }
-        transcriptionDuration = nil
-        enhancementDuration = nil
-        aiEnhancementModelName = nil
-        promptName = nil
-        aiRequestSystemMessage = nil
-        aiRequestUserMessage = nil
     }
 }

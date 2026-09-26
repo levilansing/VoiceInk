@@ -20,10 +20,27 @@ struct TranscriptionListItem: View {
             .labelsHidden()
 
             VStack(alignment: .leading, spacing: 4) {
-                HStack {
+                HStack(spacing: 6) {
                     Text(transcription.timestamp, format: .dateTime.month(.abbreviated).day().hour().minute())
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.secondary)
+
+                    if transcription.isCanceled {
+                        HStack(spacing: 3) {
+                            Image(systemName: "slash.circle")
+                                .font(.system(size: 8, weight: .medium))
+                            Text("Canceled")
+                                .font(.system(size: 9.5, weight: .medium))
+                        }
+                        .foregroundColor(AppTheme.Status.warningStrong)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule()
+                                .fill(AppTheme.Status.warningStrong.opacity(0.12))
+                        )
+                    }
+
                     Spacer()
                     if transcription.duration > 0 {
                         Text(transcription.duration.formatTiming())
@@ -41,7 +58,7 @@ struct TranscriptionListItem: View {
                 Text(transcription.enhancedText ?? transcription.text)
                     .font(.system(size: 12, weight: .regular))
                     .lineLimit(2)
-                    .foregroundColor(.primary)
+                    .foregroundColor(transcription.isCanceled ? AppTheme.Text.secondary : .primary)
             }
         }
         .padding(10)
@@ -58,7 +75,7 @@ struct TranscriptionListItem: View {
                     .fill(AppTheme.Surface.subtle)
                     .overlay {
                         RoundedRectangle(cornerRadius: AppTheme.Radius.card, style: .continuous)
-                            .strokeBorder(AppTheme.Border.tint, lineWidth: 1)
+                            .strokeBorder(transcription.isCanceled ? AppTheme.Status.warningStrong.opacity(0.25) : AppTheme.Border.tint, lineWidth: 1)
                     }
             }
         }

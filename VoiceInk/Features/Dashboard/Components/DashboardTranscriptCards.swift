@@ -113,15 +113,33 @@ private struct DashboardTranscriptCardRow: View {
             .padding(.top, 3)
 
             VStack(alignment: .leading, spacing: 5) {
-                Text(metadataText)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(AppTheme.Text.secondary)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                HStack(spacing: 6) {
+                    Text(metadataText)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(AppTheme.Text.secondary)
+                        .lineLimit(1)
+
+                    if transcription.isCanceled {
+                        HStack(spacing: 3) {
+                            Image(systemName: "slash.circle")
+                                .font(.system(size: 8, weight: .medium))
+                            Text("Canceled")
+                                .font(.system(size: 9.5, weight: .medium))
+                        }
+                        .foregroundColor(AppTheme.Status.warningStrong)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1.5)
+                        .background(
+                            Capsule()
+                                .fill(AppTheme.Status.warningStrong.opacity(0.12))
+                        )
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 Text(isExpanded ? copyText : previewText)
                     .font(.system(size: 13, weight: .regular))
-                    .foregroundStyle(AppTheme.Text.primary)
+                    .foregroundStyle(transcription.isCanceled ? AppTheme.Text.secondary : AppTheme.Text.primary)
                     .lineLimit(isExpanded ? nil : 2)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }

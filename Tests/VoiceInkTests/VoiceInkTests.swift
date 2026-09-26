@@ -42,7 +42,7 @@ struct VoiceInkTests {
         #expect(error == nil)
     }
 
-    @Test func testLicenseBypassAlwaysLicensed() throws {
+    @Test @MainActor func testLicenseBypassAlwaysLicensed() throws {
         let vm = LicenseViewModel.shared
         #expect(vm.isLicensed)
         #expect(vm.hasVerifiedLicense)
@@ -83,5 +83,51 @@ struct VoiceInkTests {
         // Meaningful sentences or words should be recognized
         #expect(LastTranscriptionService.isMeaningful("Hello world"))
         #expect(LastTranscriptionService.isMeaningful("This is a long dictation that should be preserved."))
+    }
+
+    @Test func testCanceledTranscriptionPreservesText() throws {
+        let transcription = Transcription(
+            text: "This is a transcribed sentence.",
+            duration: 5.0,
+            enhancedText: "This is an enhanced transcribed sentence."
+        )
+        #expect(!transcription.isCanceled)
+        #expect(transcription.status == .pending)
+
+        transcription.markAsCanceledTranscription(duration: 5.0, modelName: "whisper-large")
+        #expect(transcription.isCanceled)
+        #expect(transcription.status == .canceled)
+        #expect(transcription.text == "This is a transcribed sentence.")
+        #expect(transcription.enhancedText == "This is an enhanced transcribed sentence.")
+        #expect(transcription.duration == 5.0)
+        #expect(transcription.transcriptionModelName == "whisper-large")
+    }
+
+    @Test func testCanceledTranscriptionWithExplicitText() throws {
+        let transcription = Transcription(
+            text: "",
+            duration: 0
+        )
+        transcription.markAsCanceledTranscription(
+            text: "Explicit transcribed text from canceled pipeline.",
+            duration: 3.5,
+            modelName: "fluid-audio"
+        )
+        #expect(transcription.isCanceled)
+        #expect(transcription.status == .canceled)
+        #expect(transcription.text == "Explicit transcribed text from canceled pipeline.")
+        #expect(transcription.duration == 3.5)
+        #expect(transcription.transcriptionModelName == "fluid-audio")
+    }
+
+    @Test func testCanceledTranscriptionFallbackWhenEmpty() throws {
+        let transcription = Transcription(
+            text: "",
+            duration: 0
+        )
+        transcription.markAsCanceledTranscription()
+        #expect(transcription.isCanceled)
+        #expect(transcription.status == .canceled)
+        #expect(transcription.text == Transcription.canceledTranscriptionText)
     }
 }

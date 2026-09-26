@@ -70,7 +70,7 @@ class TranscriptionPipeline {
         var outputForDelivery: OutputRuntimeConfiguration?
         var responseConfig: EnhancementRuntimeConfiguration?
 
-        func finishCanceledTranscription() async {
+        func finishCanceledTranscription(text: String? = nil) async {
             await onCancel()
 
             let canceledDuration: TimeInterval?
@@ -82,41 +82,45 @@ class TranscriptionPipeline {
             }
 
             transcription.markAsCanceledTranscription(
+                text: text ?? (transcription.text.isEmpty ? nil : transcription.text),
                 duration: canceledDuration,
                 modelName: transcription.transcriptionModelName ?? model.displayName
             )
 
             do {
                 try modelContext.save()
+                NotificationCenter.default.post(name: .transcriptionCompleted, object: transcription)
             } catch {
                 logger.error("Failed to save canceled transcription: \(error, privacy: .public)")
             }
         }
 
-        if shouldCancel() {
-            await finishCanceledTranscription()
-            return
-        }
-
         do {
             let transcriptionStart = Date()
             var text: String
-            if let session {
-                text = try await session.transcribe(audioURL: audioURL)
-            } else {
-                text = try await serviceRegistry.transcribe(
-                    audioURL: audioURL,
-                    model: model,
-                    context: transcriptionConfiguration.requestContext
-                )
+            do {
+                if let session {
+                    text = try await session.transcribe(audioURL: audioURL)
+                } else {
+                    text = try await serviceRegistry.transcribe(
+                        audioURL: audioURL,
+                        model: model,
+                        context: transcriptionConfiguration.requestContext
+                    )
+                }
+            } catch {
+                if shouldCancel() {
+                    text = try await serviceRegistry.transcribe(
+                        audioURL: audioURL,
+                        model: model,
+                        context: transcriptionConfiguration.requestContext
+                    )
+                } else {
+                    throw error
+                }
             }
             text = TranscriptionOutputFilter.filter(text)
             let transcriptionDuration = Date().timeIntervalSince(transcriptionStart)
-
-            if shouldCancel() {
-                await finishCanceledTranscription()
-                return
-            }
 
             text = text.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -151,6 +155,11 @@ class TranscriptionPipeline {
             transcription.modeEmoji = modeMetadata.emoji
             finalText = cleanedText
 
+            if shouldCancel() {
+                await finishCanceledTranscription(text: cleanedText)
+                return
+            }
+
             if !assistant.isFollowUp {
                 let shouldRespondInRecorder =
                     resolvedOutputConfiguration.outputMode == .respond
@@ -175,7 +184,7 @@ class TranscriptionPipeline {
                     !shouldSkipEnhancement
                 {
                     if shouldCancel() {
-                        await finishCanceledTranscription()
+                        await finishCanceledTranscription(text: cleanedText)
                         return
                     }
 
@@ -213,15 +222,25 @@ class TranscriptionPipeline {
                             )
                         }
                         if shouldCancel() {
-                            await finishCanceledTranscription()
+                            await finishCanceledTranscription(text: cleanedText)
                             return
                         }
                     }
                 }
             }
 
+            if shouldCancel() {
+                await finishCanceledTranscription(text: finalText ?? cleanedText)
+                return
+            }
+
             transcription.transcriptionStatus = TranscriptionStatus.completed.rawValue
         } catch {
+            if shouldCancel() {
+                await finishCanceledTranscription()
+                return
+            }
+
             let errorDescription = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
 
             if let nativeAppleError = error as? NativeAppleTranscriptionService.ServiceError,
@@ -267,7 +286,7 @@ class TranscriptionPipeline {
         }
 
         if shouldCancel() {
-            await finishCanceledTranscription()
+            await finishCanceledTranscription(text: finalText ?? transcription.text)
             return
         }
 

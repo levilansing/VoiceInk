@@ -19,6 +19,32 @@ struct TranscriptionInfoPanel: View {
 
     private var detailsSection: some View {
         Section {
+            if transcription.isCanceled {
+                metadataRow(
+                    icon: "slash.circle.fill",
+                    label: "Status",
+                    value: "Canceled",
+                    iconColor: AppTheme.Status.warningStrong,
+                    valueColor: AppTheme.Status.warningStrong
+                )
+            } else if transcription.status == .failed {
+                metadataRow(
+                    icon: "exclamationmark.circle.fill",
+                    label: "Status",
+                    value: "Failed",
+                    iconColor: AppTheme.Status.error,
+                    valueColor: AppTheme.Status.error
+                )
+            } else if transcription.status == .completed {
+                metadataRow(
+                    icon: "checkmark.circle.fill",
+                    label: "Status",
+                    value: "Completed",
+                    iconColor: AppTheme.Status.positive,
+                    valueColor: AppTheme.Status.positive
+                )
+            }
+
             metadataRow(
                 icon: "calendar",
                 label: "Date",
@@ -161,11 +187,17 @@ struct TranscriptionInfoPanel: View {
         }
     }
 
-    private func metadataRow(icon: String, label: LocalizedStringKey, value: String) -> some View {
+    private func metadataRow(
+        icon: String,
+        label: LocalizedStringKey,
+        value: String,
+        iconColor: Color = .secondary,
+        valueColor: Color = AppTheme.Text.primary
+    ) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundColor(.secondary)
+                .foregroundColor(iconColor)
                 .frame(width: 20, height: 20)
 
             Text(label)
@@ -176,7 +208,7 @@ struct TranscriptionInfoPanel: View {
 
             Text(value)
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(.primary)
+                .foregroundColor(valueColor)
                 .lineLimit(1)
         }
     }

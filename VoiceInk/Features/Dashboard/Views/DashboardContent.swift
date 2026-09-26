@@ -182,13 +182,11 @@ struct DashboardContent: View {
 
     private func isRecentDashboardTranscription(_ transcription: Transcription) -> Bool {
         let text = transcription.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else {
+        guard !text.isEmpty, text != Transcription.canceledTranscriptionText else {
             return false
         }
 
-        if transcription.transcriptionStatus == TranscriptionStatus.failed.rawValue
-            || transcription.transcriptionStatus == TranscriptionStatus.canceled.rawValue
-        {
+        if transcription.transcriptionStatus == TranscriptionStatus.failed.rawValue {
             return false
         }
 

@@ -14,10 +14,78 @@ struct TranscriptionDetailView: View {
         return false
     }
 
+    @State private var didCopyBannerText = false
+
+    private var copyTargetText: String {
+        transcription.enhancedText ?? transcription.text
+    }
+
+    private var canceledBanner: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "slash.circle.fill")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(AppTheme.Status.warningStrong)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Canceled Transcription")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(AppTheme.Text.primary)
+                Text("This transcription was canceled and was not copied or pasted.")
+                    .font(.system(size: 11))
+                    .foregroundColor(AppTheme.Text.secondary)
+            }
+
+            Spacer()
+
+            Button {
+                let success = ClipboardManager.copyToClipboard(copyTargetText)
+                if success {
+                    withAnimation { didCopyBannerText = true }
+                    NotificationManager.shared.showNotification(
+                        title: String(localized: "Transcription copied to clipboard"),
+                        type: .success
+                    )
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        withAnimation { didCopyBannerText = false }
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: didCopyBannerText ? "checkmark" : "doc.on.doc")
+                        .font(.system(size: 10, weight: .medium))
+                    Text(didCopyBannerText ? "Copied" : "Copy")
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .foregroundColor(didCopyBannerText ? AppTheme.Status.positive : AppTheme.Text.primary)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 5)
+                .background(
+                    Capsule()
+                        .fill(AppTheme.Surface.card)
+                )
+            }
+            .buttonStyle(.plain)
+            .help("Copy transcription to clipboard")
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.Radius.card, style: .continuous)
+                .fill(AppTheme.Status.warningStrong.opacity(0.08))
+                .overlay {
+                    RoundedRectangle(cornerRadius: AppTheme.Radius.card, style: .continuous)
+                        .strokeBorder(AppTheme.Status.warningStrong.opacity(0.22), lineWidth: 1)
+                }
+        )
+    }
+
     var body: some View {
         VStack(spacing: 12) {
             ScrollView {
                 VStack(spacing: 16) {
+                    if transcription.isCanceled {
+                        canceledBanner
+                    }
+
                     MessageBubble(
                         label: "Original",
                         text: transcription.text,

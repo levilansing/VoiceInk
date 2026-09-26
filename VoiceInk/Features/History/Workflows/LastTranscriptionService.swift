@@ -48,8 +48,17 @@ class LastTranscriptionService: ObservableObject {
 
         do {
             let transcriptions = try modelContext.fetch(descriptor)
-            let completed = transcriptions.filter { $0.transcriptionStatus == TranscriptionStatus.completed.rawValue }
-            return Array(completed.prefix(limit))
+            let valid = transcriptions.filter { item in
+                if item.transcriptionStatus == TranscriptionStatus.completed.rawValue {
+                    return true
+                }
+                if item.transcriptionStatus == TranscriptionStatus.canceled.rawValue {
+                    let text = item.enhancedText?.isEmpty == false ? item.enhancedText! : item.text
+                    return isMeaningful(text) && text != Transcription.canceledTranscriptionText
+                }
+                return false
+            }
+            return Array(valid.prefix(limit))
         } catch {
             print("Error fetching recent transcriptions: \(error)")
             return []

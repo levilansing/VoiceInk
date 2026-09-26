@@ -707,23 +707,31 @@ class VoiceInkEngine: NSObject, ObservableObject {
     private func finishActiveRecorderCancellation() async {
         activeRecordingStartID = nil
         clearActiveRecordingContext()
+        let transcriptText = partialTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
         await recorder.stopRecording()
-        await saveCanceledRecording()
+        await saveCanceledRecording(partialTranscript: transcriptText)
         recordedFile = nil
         partialTranscript = ""
         recordingState = .idle
         await cleanupResources()
     }
 
-    private func saveCanceledRecording() async {
+    private func saveCanceledRecording(partialTranscript: String? = nil) async {
         guard let recordedFile,
             FileManager.default.fileExists(atPath: recordedFile.path)
         else { return }
 
         let duration = await AudioFileMetadata.duration(for: recordedFile)
+        let textToUse: String
+        if let partialTranscript, !partialTranscript.isEmpty {
+            textToUse = partialTranscript
+        } else {
+            textToUse = Transcription.canceledTranscriptionText
+        }
+
         let transcription = makeRecordingTranscription(
             for: recordedFile,
-            text: Transcription.canceledTranscriptionText,
+            text: textToUse,
             duration: duration,
             transcriptionStatus: .canceled
         )

@@ -151,6 +151,16 @@ struct RecorderHistoryPopover: View {
         let text = item.enhancedText?.isEmpty == false ? item.enhancedText! : item.text
         let wordCount = text.split(whereSeparator: \.isWhitespace).count
 
+        let rowBackground: Color = {
+            if isCopied {
+                return Color.green.opacity(0.12)
+            } else if item.isCanceled {
+                return Color.orange.opacity(0.08)
+            } else {
+                return Color.white.opacity(0.06)
+            }
+        }()
+
         return Button {
             copyText(text, for: item.id)
         } label: {
@@ -164,9 +174,15 @@ struct RecorderHistoryPopover: View {
                         .font(.system(size: 8))
                         .foregroundColor(.white.opacity(0.3))
 
-                    Text("\(wordCount) words")
-                        .font(.system(size: 10))
-                        .foregroundColor(.white.opacity(0.45))
+                    if item.isCanceled {
+                        Text("Canceled")
+                            .font(.system(size: 9.5, weight: .medium))
+                            .foregroundColor(Color.orange.opacity(0.9))
+                    } else {
+                        Text("\(wordCount) words")
+                            .font(.system(size: 10))
+                            .foregroundColor(.white.opacity(0.45))
+                    }
 
                     Spacer()
 
@@ -177,7 +193,7 @@ struct RecorderHistoryPopover: View {
 
                 Text(text)
                     .font(.system(size: 11))
-                    .foregroundColor(.white.opacity(0.92))
+                    .foregroundColor(item.isCanceled ? .white.opacity(0.70) : .white.opacity(0.92))
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -185,7 +201,7 @@ struct RecorderHistoryPopover: View {
             .padding(8)
             .background(
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(isCopied ? Color.green.opacity(0.12) : Color.white.opacity(0.06))
+                    .fill(rowBackground)
             )
         }
         .buttonStyle(.plain)

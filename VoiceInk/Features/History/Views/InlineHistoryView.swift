@@ -521,10 +521,26 @@ private struct HistoryCardRow: View {
                 .labelsHidden()
 
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 6) {
                         Text(transcription.timestamp, format: .dateTime.month(.abbreviated).day().hour().minute())
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(.secondary)
+
+                        if transcription.isCanceled {
+                            HStack(spacing: 3) {
+                                Image(systemName: "slash.circle")
+                                    .font(.system(size: 8, weight: .medium))
+                                Text("Canceled")
+                                    .font(.system(size: 9.5, weight: .medium))
+                            }
+                            .foregroundColor(AppTheme.Status.warningStrong)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1.5)
+                            .background(
+                                Capsule()
+                                    .fill(AppTheme.Status.warningStrong.opacity(0.12))
+                            )
+                        }
 
                         if !isExpanded {
                             Button {
@@ -546,7 +562,7 @@ private struct HistoryCardRow: View {
                         Text(preferredCopyText)
                             .font(.system(size: 13))
                             .lineLimit(2)
-                            .foregroundColor(.primary)
+                            .foregroundColor(transcription.isCanceled ? AppTheme.Text.secondary : .primary)
                     }
                 }
 
@@ -580,6 +596,28 @@ private struct HistoryCardRow: View {
 
     private var expandedContent: some View {
         VStack(alignment: .leading, spacing: 8) {
+            if transcription.isCanceled {
+                HStack(spacing: 8) {
+                    Image(systemName: "slash.circle.fill")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(AppTheme.Status.warningStrong)
+                    Text("This transcription was canceled and was not copied or pasted.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(AppTheme.Text.secondary)
+                    Spacer()
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(AppTheme.Status.warningStrong.opacity(0.08))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .strokeBorder(AppTheme.Status.warningStrong.opacity(0.18), lineWidth: 1)
+                        }
+                )
+            }
+
             // Tabs
             if transcription.enhancedText != nil {
                 HStack(spacing: 4) {
