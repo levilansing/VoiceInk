@@ -2,8 +2,9 @@ name: Build VoiceInk App
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
+  # Disabled: was failing on GitHub Actions runner
+  # push:
+  #   branches: [ main ]
 
 jobs:
   build:
